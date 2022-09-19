@@ -71,8 +71,8 @@
 			children = (
 				C7CCCF9E28D4D38300E86B9B /* FlashzillaApp.swift */,
 				C7CCCFA028D4D38300E86B9B /* ContentView.swift */,
-				C736290228D911EE00E046FC /* Card.swift */,
 				C736290428D9121C00E046FC /* CardView.swift */,
+				C736290228D911EE00E046FC /* Card.swift */,
 				C7CCCFA228D4D38400E86B9B /* Assets.xcassets */,
 				C7CCCFA428D4D38400E86B9B /* Preview Content */,
 			);
