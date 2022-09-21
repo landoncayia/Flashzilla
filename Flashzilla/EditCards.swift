@@ -9,17 +9,33 @@ import SwiftUI
 
 struct EditCards: View {
     @Environment(\.dismiss) var dismiss
+    
     @State private var cards = [Card]()
     @State private var newPrompt = ""
     @State private var newAnswer = ""
+    
+    @FocusState private var focusedField: FocusedField?
+    
+    private enum FocusedField {
+        case prompt, answer
+    }
     
     var body: some View {
         NavigationView {
             List {
                 Section("Add new card") {
                     TextField("Prompt", text: $newPrompt)
+                        .focused($focusedField, equals: .prompt)
                     TextField("Answer", text: $newAnswer)
+                        .focused($focusedField, equals: .answer)
                     Button("Add card", action: addCard)
+                }
+                .onSubmit {
+                    if focusedField == .prompt {
+                        focusedField = .answer
+                    } else {
+                        focusedField = nil
+                    }
                 }
                 
                 Section {
@@ -69,6 +85,9 @@ struct EditCards: View {
         
         let card = Card(prompt: trimmedPrompt, answer: trimmedAnswer)
         cards.insert(card, at: 0)
+        newPrompt = ""
+        newAnswer = ""
+        focusedField = nil
         saveData()
     }
     
