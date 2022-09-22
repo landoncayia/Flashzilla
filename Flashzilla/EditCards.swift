@@ -39,12 +39,12 @@ struct EditCards: View {
                 }
                 
                 Section {
-                    ForEach(0..<cards.count, id: \.self) { index in
+                    ForEach(cards) { card in
                         VStack(alignment: .leading) {
-                            Text(cards[index].prompt)
+                            Text(card.prompt)
                                 .font(.headline)
                             
-                            Text(cards[index].answer)
+                            Text(card.answer)
                                 .foregroundColor(.secondary)
                         }
                     }
@@ -83,7 +83,7 @@ struct EditCards: View {
         let trimmedAnswer = newAnswer.trimmingCharacters(in: .whitespaces)
         guard trimmedPrompt.isEmpty == false && trimmedAnswer.isEmpty == false else { return }
         
-        let card = Card(prompt: trimmedPrompt, answer: trimmedAnswer)
+        let card = Card(id: UUID(), prompt: trimmedPrompt, answer: trimmedAnswer)
         cards.insert(card, at: 0)
         newPrompt = ""
         newAnswer = ""

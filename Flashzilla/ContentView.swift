@@ -43,10 +43,18 @@ struct ContentView: View {
                     .clipShape(Capsule())
                 
                 ZStack {
-                    ForEach(0..<cards.count, id: \.self) { index in
-                        CardView(card: cards[index]) {
-                            withAnimation {
-                                removeCard(at: index)
+                    ForEach(cards, id: \.self) { card in
+                        let index = getIndex(for: card)
+                        
+                        CardView(card: card) { isCorrect in
+                            if isCorrect {
+                                withAnimation {
+                                    removeCard(at: index)
+                                }
+                            } else {
+                                withAnimation {
+                                    reinsertCard(at: index)
+                                }
                             }
                         }
                         .stacked(at: index, in: cards.count)
@@ -143,12 +151,25 @@ struct ContentView: View {
         .onAppear(perform: resetCards)
     }
     
+    func getIndex(for card: Card) -> Int {
+        cards.firstIndex(where: { $0.id == card.id }) ?? 0
+    }
+    
     func loadData() {
         if let data = UserDefaults.standard.data(forKey: "Cards") {
             if let decoded = try? JSONDecoder().decode([Card].self, from: data) {
                 cards = decoded
             }
         }
+    }
+    
+    func reinsertCard(at index: Int) {
+        guard index >= 0 else { return }
+        
+        let tempCard = cards[index]
+        let newCard = Card(id: UUID(), prompt: tempCard.prompt, answer: tempCard.answer)
+        cards.remove(at: index)
+        cards.insert(newCard, at: 0)
     }
     
     func removeCard(at index: Int) {
