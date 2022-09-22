@@ -16,6 +16,8 @@ struct EditCards: View {
     
     @FocusState private var focusedField: FocusedField?
     
+    let savePath = FileManager.documentsDirectory.appendingPathComponent("SavedCards")
+    
     private enum FocusedField {
         case prompt, answer
     }
@@ -65,16 +67,21 @@ struct EditCards: View {
     }
     
     func loadData() {
-        if let data = UserDefaults.standard.data(forKey: "Cards") {
-            if let decoded = try? JSONDecoder().decode([Card].self, from: data) {
-                cards = decoded
-            }
+        do {
+            let data = try Data(contentsOf: savePath)
+            let decodedData = try JSONDecoder().decode([Card].self, from: data)
+            cards = decodedData
+        } catch {
+            cards = []
         }
     }
     
-    func saveData() {
-        if let data = try? JSONEncoder().encode(cards) {
-            UserDefaults.standard.set(data, forKey: "Cards")
+    func saveData() {        
+        do {
+            let data = try JSONEncoder().encode(cards)
+            try data.write(to: savePath, options: [.atomicWrite, .completeFileProtection])
+        } catch {
+            print("Unable to save card data.")
         }
     }
     
