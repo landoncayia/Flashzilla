@@ -7,27 +7,19 @@
 
 import SwiftUI
 
-extension View {
-    func stacked(at position: Int, in total: Int) -> some View {
-        let offset = Double(total - position)
-        return self.offset(x: 0, y: offset * 10)
-    }
-}
-
 struct ContentView: View {
     @Environment(\.accessibilityDifferentiateWithoutColor) var differentiateWithoutColor
     @Environment(\.accessibilityVoiceOverEnabled) var voiceOverEnabled
-    @State private var cards = [Card]()
-    
-    @State private var timeRemaining = 100
-    let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-    
     @Environment(\.scenePhase) var scenePhase
-    @State private var isActive = true
     
+    @StateObject var model = Cards()
+    
+    @State private var cards = [Card]()
+    @State private var timeRemaining = 100
+    @State private var isActive = true
     @State private var showingEditScreen = false
     
-    let savePath = FileManager.documentsDirectory.appendingPathComponent("SavedCards")
+    let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
     var body: some View {
         ZStack {
@@ -157,16 +149,6 @@ struct ContentView: View {
         cards.firstIndex(where: { $0.id == card.id }) ?? 0
     }
     
-    func loadData() {
-        do {
-            let data = try Data(contentsOf: savePath)
-            let decodedData = try JSONDecoder().decode([Card].self, from: data)
-            cards = decodedData
-        } catch {
-            cards = []
-        }
-    }
-    
     func reinsertCard(at index: Int) {
         guard index >= 0 else { return }
         
@@ -189,7 +171,15 @@ struct ContentView: View {
     func resetCards() {
         timeRemaining = 100
         isActive = true
-        loadData()
+        model.loadData()
+        cards = model.allCards
+    }
+}
+
+extension View {
+    func stacked(at position: Int, in total: Int) -> some View {
+        let offset = Double(total - position)
+        return self.offset(x: 0, y: offset * 10)
     }
 }
 

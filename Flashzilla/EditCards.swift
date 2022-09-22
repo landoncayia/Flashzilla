@@ -10,13 +10,9 @@ import SwiftUI
 struct EditCards: View {
     @Environment(\.dismiss) var dismiss
     
-    @State private var cards = [Card]()
-    @State private var newPrompt = ""
-    @State private var newAnswer = ""
+    @StateObject var cards = Cards()
     
     @FocusState private var focusedField: FocusedField?
-    
-    let savePath = FileManager.documentsDirectory.appendingPathComponent("SavedCards")
     
     private enum FocusedField {
         case prompt, answer
@@ -26,11 +22,16 @@ struct EditCards: View {
         NavigationView {
             List {
                 Section("Add new card") {
-                    TextField("Prompt", text: $newPrompt)
+                    TextField("Prompt", text: $cards.newPrompt)
                         .focused($focusedField, equals: .prompt)
-                    TextField("Answer", text: $newAnswer)
+                    TextField("Answer", text: $cards.newAnswer)
                         .focused($focusedField, equals: .answer)
-                    Button("Add card", action: addCard)
+                    Button("Add card") {
+                        Task {
+                            cards.addCard()
+                        }
+                        focusedField = nil
+                    }
                 }
                 .onSubmit {
                     if focusedField == .prompt {
@@ -41,7 +42,7 @@ struct EditCards: View {
                 }
                 
                 Section {
-                    ForEach(cards) { card in
+                    ForEach(cards.allCards) { card in
                         VStack(alignment: .leading) {
                             Text(card.prompt)
                                 .font(.headline)
@@ -50,7 +51,7 @@ struct EditCards: View {
                                 .foregroundColor(.secondary)
                         }
                     }
-                    .onDelete(perform: removeCards)
+                    .onDelete(perform: cards.removeCards)
                 }
             }
             .navigationTitle("Edit Cards")
@@ -58,49 +59,11 @@ struct EditCards: View {
                 Button("Done", action: done)
             }
             .listStyle(.grouped)
-            .onAppear(perform: loadData)
         }
     }
     
     func done() {
         dismiss()
-    }
-    
-    func loadData() {
-        do {
-            let data = try Data(contentsOf: savePath)
-            let decodedData = try JSONDecoder().decode([Card].self, from: data)
-            cards = decodedData
-        } catch {
-            cards = []
-        }
-    }
-    
-    func saveData() {        
-        do {
-            let data = try JSONEncoder().encode(cards)
-            try data.write(to: savePath, options: [.atomicWrite, .completeFileProtection])
-        } catch {
-            print("Unable to save card data.")
-        }
-    }
-    
-    func addCard() {
-        let trimmedPrompt = newPrompt.trimmingCharacters(in: .whitespaces)
-        let trimmedAnswer = newAnswer.trimmingCharacters(in: .whitespaces)
-        guard trimmedPrompt.isEmpty == false && trimmedAnswer.isEmpty == false else { return }
-        
-        let card = Card(id: UUID(), prompt: trimmedPrompt, answer: trimmedAnswer)
-        cards.insert(card, at: 0)
-        newPrompt = ""
-        newAnswer = ""
-        focusedField = nil
-        saveData()
-    }
-    
-    func removeCards(at offsets: IndexSet) {
-        cards.remove(atOffsets: offsets)
-        saveData()
     }
 }
 
